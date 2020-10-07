@@ -6,18 +6,20 @@
     :options="options"
   >
     <GmapMarker
+      v-if="showMarker"
       :position="driverLocation"
       :clickable="true"
       @click="toggleInfoWindow(driverLocation)"
       :icon="markerOptions"
     />
     <gmap-info-window
+      v-if="showMarker"
       :options="infoOptions"
       :position="infoWindowPos"
       :opened="infoWinOpen"
       @closeclick="infoWinOpen=true"
     >
-      <map-info-window :location-name="locationName" :driver-name="driver" />
+      <map-info-window v-if="showMarker" :location-name="locationName" :driver-name="driverName" />
     </gmap-info-window>
   </GmapMap>
 </template>
@@ -31,14 +33,17 @@ export default {
   props: {
     driverCoordinates: {
       type: Object,
-      required: false
+      required: true
+    },
+    driverName: {
+      type: String,
+      required: true
     }
   },
   components: {
     MapInfoWindow
   },
   data: () => ({
-    driver: 'driver A',
     center: mapCoordinates.center,
     zoom: 17,
     driverLocation: null,
@@ -55,11 +60,7 @@ export default {
     noCoordinates: mapCoordinates.center,
     markerOptions: {
       url: require('@/assets/maker.svg'),
-      scaledSize: { width: 55, height: 75, f: 'px', b: 'px' },
-      pixelOffset: {
-        width: 0,
-        height: 35
-      }
+      scaledSize: { width: 55, height: 75, f: 'px', b: 'px' }
     },
     count: 0,
     steps: 7,
@@ -79,9 +80,16 @@ export default {
   }),
   watch: {
     driverCoordinates (newCoordinates, oldCoordinates) {
-      if (!oldCoordinates.lat) return
-      this.getLocationName(newCoordinates)
-      this.transition(oldCoordinates, newCoordinates)
+      if (!oldCoordinates.lat) oldCoordinates = newCoordinates
+      if (this.showMarker) {
+        this.getLocationName(newCoordinates)
+        this.transition(oldCoordinates, newCoordinates)
+      }
+    }
+  },
+  computed: {
+    showMarker () {
+      return Object.keys(this.driverCoordinates).length
     }
   },
   methods: {
@@ -93,22 +101,22 @@ export default {
       this.oldlng = oldCoordinates.lng
       this.moveMarker()
     },
+    moveMarker () {
+      this.oldLat += this.deltaLat
+      this.oldlng += this.deltaLng
+      this.map.panTo(this.driverLocation)
+      this.driverLocation = { lat: this.oldLat, lng: this.oldlng }
+      this.infoWindowPos = this.driverLocation
+      if (this.count !== 100) {
+        this.count++
+        setTimeout(this.moveMarker, 10)
+      }
+    },
     toggleInfoWindow (marker) {
       this.center = marker
       this.infoWindowPos = marker
       this.infoContent = marker
       this.infoWinOpen = !this.infoWinOpen
-    },
-    moveMarker () {
-      this.oldLat += this.deltaLat
-      this.oldlng += this.deltaLng
-      this.driverLocation = { lat: this.oldLat, lng: this.oldlng }
-      this.infoWindowPos = this.driverLocation
-      this.map.panTo(this.driverLocation)
-      if (this.count !== 100) {
-        this.count++
-        setTimeout(this.moveMarker, 10)
-      }
     },
     getLocationName (coordinates) {
       // eslint-disable-next-line no-undef
@@ -154,17 +162,5 @@ export default {
     width: 100%;
     height: 100%;
     background-color: grey;
-  }
-  .map-error {
-    &:before {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: lighten(#9e9e9e, 30%);
-      content: '';
-      z-index: 3;
-    }
   }
 </style>

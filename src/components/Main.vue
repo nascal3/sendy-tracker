@@ -3,25 +3,26 @@
     <v-row class="main-section">
       <v-col md="6" cols="12">
         <div class="map-container">
-          <Map :driver-coordinates="driverPosition" />
+          <Map :driver-coordinates="driverPosition" :driver-name="driverName" />
         </div>
       </v-col>
-
       <v-col md="6" cols="12">
-
+        <delivery-status :delivery-status="deliveryStatus" :driver-name="driverName"/>
       </v-col>
-
     </v-row>
   </v-container>
 </template>
 
 <script>
-
+import DeliveryStatus from '@/components/DeliveryStatus'
 import Map from '@/components/Map'
 
 export default {
   name: 'Main',
-  components: { Map },
+  components: {
+    Map,
+    DeliveryStatus
+  },
   data: () => ({
     driverCoordinates: [
       [-1.298982, 36.776811],
@@ -36,7 +37,10 @@ export default {
       [-1.292622, 36.779075],
       [-1.291844, 36.779049]
     ],
-    driverPosition: {}
+    driverBCoordinates: [-1.288360, 36.822092],
+    driverPosition: {},
+    driverName: 'driver A',
+    deliveryStatus: 'Dispatching'
   }),
   methods: {
     setCoordinates () {
@@ -52,10 +56,39 @@ export default {
           i++
           if (i < positionsCount) {
             startCoordinatesSetter()
-          }
+          } else { this.deliveryState() }
         }, 4000)
       }
       startCoordinatesSetter()
+    },
+    timeout (ms) {
+      return new Promise((resolve, reject) => setTimeout(resolve, ms))
+    },
+    async deliveryState () {
+      await this.timeout(10000)
+      const options = { icon: 'error_outline' }
+      this.$toasted.error('Delivery cancelled', options)
+
+      this.deliveryStatus = 'cancelled'
+      await this.timeout(5000)
+      await this.redeployingPackage()
+    },
+    async redeployingPackage () {
+      this.deliveryStatus = 'pending dispatch...'
+      this.driverName = ''
+      this.driverPosition = {}
+      await this.timeout(10000)
+      this.deployPackage()
+    },
+    deployPackage () {
+      const options = { icon: 'check_circle_outline' }
+      this.$toasted.info('Delivery dispatched', options)
+      this.deliveryStatus = 'dispatching'
+      this.driverName = 'driver B'
+      this.driverPosition = {
+        lat: this.driverBCoordinates[0],
+        lng: this.driverBCoordinates[1]
+      }
     }
   },
   mounted () {
@@ -67,8 +100,8 @@ export default {
 <style lang="scss" scoped>
 .map-container {
   position: relative;
-  width: 54rem;
-  height: 30rem;
-  margin-bottom: 1rem;
+  width: 500px;
+  height: 480px;
+  margin-bottom: 10px;
 }
 </style>

@@ -28,10 +28,12 @@ export default {
     &-title {
       color: #1F80BB;
       font-weight: 500;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     &-text {
+      text-transform: capitalize;
       color: #ED7C38;
+      margin-bottom: 5px;
     }
   }
 </style>
