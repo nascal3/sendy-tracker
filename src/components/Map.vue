@@ -8,8 +8,7 @@
     <GmapMarker
       :position="driverLocation"
       :clickable="true"
-      :offsetX="-10"
-      :offsetY="17.5"
+      @click="toggleInfoWindow(driverLocation)"
       :icon="markerOptions"
     />
     <gmap-info-window
@@ -93,6 +92,12 @@ export default {
       this.oldLat = oldCoordinates.lat
       this.oldlng = oldCoordinates.lng
       this.moveMarker()
+    },
+    toggleInfoWindow (marker) {
+      this.center = marker
+      this.infoWindowPos = marker
+      this.infoContent = marker
+      this.infoWinOpen = !this.infoWinOpen
     },
     moveMarker () {
       this.oldLat += this.deltaLat

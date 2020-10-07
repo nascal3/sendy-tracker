@@ -53,7 +53,7 @@ export default {
           if (i < positionsCount) {
             startCoordinatesSetter()
           }
-        }, 5000)
+        }, 4000)
       }
       startCoordinatesSetter()
     }
